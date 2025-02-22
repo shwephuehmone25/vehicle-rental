@@ -86,28 +86,79 @@ class VehicleController extends Controller
         }
     }
 
-
     /**
-     * Display the specified resource.
+     * Show details of a specific vehicle.
      */
-    public function show(Vehicle $vehicle)
+    public function show(Vehicle $vehicle): JsonResponse
     {
-        //
+        try {
+            return response()->json([
+                'vehicle' => $vehicle
+            ], 200);
+        } catch (\Exception $e) {
+            return response()->json([
+                'error' => 'Something went wrong',
+                'message' => $e->getMessage()
+            ], 500);
+        }
     }
 
     /**
-     * Update the specified resource in storage.
+     * Update an existing vehicle.
      */
-    public function update(Request $request, Vehicle $vehicle)
+    public function update(Request $request, Vehicle $vehicle): JsonResponse
     {
-        //
+        try {
+            $validated = $request->validate([
+                'name' => 'nullable|string|max:255',
+                'brand' => 'nullable|string|max:255',
+                'model' => 'nullable|string|max:255',
+                'year' => 'nullable|integer|min:1900|max:' . date('Y'),
+                'type' => 'nullable|in:Car,Bike,Van,Truck,SUV',
+                'price_per_day' => 'nullable|numeric|min:0',
+                'availability' => 'nullable|boolean',
+                'description' => 'nullable|string',
+                'images' => 'nullable|array',
+                'images.*' => 'nullable|url',
+                'owner_id' => 'nullable|exists:users,id',
+                'financial_status' => 'nullable|in:Active,Suspended,Bankrupt',
+            ]);
+
+            $vehicle->update($validated);
+
+            return response()->json([
+                'message' => 'Vehicle updated successfully',
+                'vehicle' => $vehicle
+            ], 200);
+        } catch (ValidationException $e) {
+            return response()->json([
+                'error' => 'Validation failed',
+                'details' => $e->errors()
+            ], 422);
+        } catch (\Exception $e) {
+            return response()->json([
+                'error' => 'Something went wrong',
+                'message' => $e->getMessage()
+            ], 500);
+        }
     }
 
     /**
-     * Remove the specified resource from storage.
+     * Delete an existing vehicle.
      */
-    public function destroy(Vehicle $vehicle)
+    public function destroy(Vehicle $vehicle): JsonResponse
     {
-        //
+        try {
+            $vehicle->delete();
+
+            return response()->json([
+                'message' => 'Vehicle deleted successfully'
+            ], 200);
+        } catch (\Exception $e) {
+            return response()->json([
+                'error' => 'Something went wrong',
+                'message' => $e->getMessage()
+            ], 500);
+        }
     }
 }
