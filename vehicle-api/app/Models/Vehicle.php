@@ -2,36 +2,53 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Database\Eloquent\Relations\HasOne;
-use Illuminate\Database\Eloquent\Factories\HasFactory;
 
 class Vehicle extends Model
 {
     use HasFactory;
 
     protected $fillable = [
-        'user_id', 'vehicle_id', 'start_date', 'end_date', 'total_price', 'status'
+        'name', 'brand', 'model', 'year', 'type', 'price_per_day', 'availability', 'description', 'images', 'owner_id', 'financial_status'
     ];
 
     protected $casts = [
-        'start_date' => 'datetime',
-        'end_date' => 'datetime',
+        'price_per_day' => 'decimal:2',
+        'availability' => 'boolean',
+        'images' => 'array',
     ];
 
-    public function user(): BelongsTo
+    /**
+     * Get the owner of the vehicle.
+     */
+    public function owner(): BelongsTo
     {
-        return $this->belongsTo(User::class);
+        return $this->belongsTo(User::class, 'owner_id');
     }
 
-    public function vehicle(): BelongsTo
+    /**
+     * Scope a query to only include available vehicles.
+     */
+    public function scopeAvailable($query)
     {
-        return $this->belongsTo(Vehicle::class);
+        return $query->where('availability', true);
     }
 
-    public function payment(): HasOne
+    /**
+     * Scope a query to filter by vehicle type.
+     */
+    public function scopeOfType($query, $type)
     {
-        return $this->hasOne(Payment::class);
+        return $query->where('type', $type);
+    }
+
+    /**
+     * Scope a query to filter by financial status.
+     */
+    public function scopeWithFinancialStatus($query, $status)
+    {
+        return $query->where('financial_status', $status);
     }
 }
